@@ -1,198 +1,181 @@
-const ready = (fn) => {
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", fn, { once: true });
-  } else {
-    fn();
-  }
-};
+// Robust fullpage track-based nav + dots + centered overlay menu + intro
+(function(){
+  const sub = document.getElementById('heroSub');
+  const burger = document.querySelector('.burger-bar');
+  const slidesRoot = document.getElementById('slides');
+  const track = document.getElementById('track');
+  const dotsNav = document.getElementById('dots');
+  const sections = Array.from(track.querySelectorAll('.slide'));
+  let index = 0;
+  let isAnimating = false;
+  let startTouchY = null;
+  let wheelAccum = 0;
+  let lastNavAt = 0;
+  const WHEEL_THRESHOLD = 60;
+  const NAV_COOLDOWN = 400; // < 500ms tween; leaves small margin
 
-ready(() => {
-  const slides = Array.from(document.querySelectorAll(".slide"));
-  if (!slides.length) return;
+  function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
 
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        const slide = entry.target;
-        if (entry.isIntersecting) {
-          slide.classList.add("is-active");
-          slide.classList.remove("is-fading-out");
-          if (slide._fadeTimeout) {
-            clearTimeout(slide._fadeTimeout);
-            slide._fadeTimeout = null;
-          }
-        } else if (slide.classList.contains("is-active")) {
-          slide.classList.remove("is-active");
-          slide.classList.add("is-fading-out");
-          slide._fadeTimeout = setTimeout(() => {
-            slide.classList.remove("is-fading-out");
-            slide._fadeTimeout = null;
-          }, 2500);
-        }
-      });
-    },
-    {
-      threshold: 0.6,
+  // TYPEWRITER
+  async function typewriter(node, text, {min=80, max=150, cursor=true}={}){
+    node.textContent = '';
+    if (cursor) node.style.borderRight = '1px solid #6b6b6b';
+    for (const ch of text){
+      node.textContent += ch;
+      const jitter = Math.random() * (max - min) + min;
+      const extra = (/[.,;:!?\s]/).test(ch) ? 28 : 0;
+      // eslint-disable-next-line no-await-in-loop
+      await sleep(jitter + extra);
     }
-  );
-
-  slides.forEach((slide) => observer.observe(slide));
-
-  // Ensure the first slide is active on load for browsers that do not trigger IntersectionObserver immediately.
-  slides[0].classList.add("is-active");
-
-});
-
-// === Line-by-Line wrapper ===
-ready(() => {
-  const paragraphs = document.querySelectorAll(
-    ".slides .slide:not(:first-child) p"
-  );
-
-  paragraphs.forEach((p) => {
-    const raw = p.innerHTML.trim();
-    if (!raw) return;
-
-    // режем по <br> (включая варианты <br>, <br/>, <br />)
-    const parts = raw.split(/<br\s*\/?>/i);
-
-    // собираем построчно со span-обёртками и теми же <br> между строками
-    const html = parts
-      .map((seg, i) => {
-        const trimmed = seg.trim();
-        if (!trimmed) return "";
-        return `
-          <span class="line" style="--delay:${(i * 0.08).toFixed(2)}s">
-            <span class="line__inner">${trimmed}</span>
-          </span>
-        `;
-      })
-      .join("<br />");
-
-    p.innerHTML = html;
-  });
-});
-
-(() => {
-  const el = document.querySelector(".cm-bg-bubbles");
-  if (!el) return;
-
-  const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (prefersReduced) return;
-
-  const TAU = Math.PI * 2;
-  const bubbles = [
-    {
-      xProp: "--x1",
-      yProp: "--y1",
-      x: {
-        base: 28,
-        waves: [
-          { amp: 16, freq: 0.018, phase: 0.00 },
-          { amp: 6.4, freq: 0.051, phase: 0.31 },
-          { amp: 3.1, freq: 0.079, phase: 0.17, fn: Math.cos },
-        ],
-      },
-      y: {
-        base: 42,
-        waves: [
-          { amp: 12, freq: 0.023, phase: 0.43 },
-          { amp: 4.6, freq: 0.056, phase: 0.11 },
-          { amp: 2.4, freq: 0.096, phase: 0.70, fn: Math.cos },
-        ],
-      },
-    },
-    {
-      xProp: "--x2",
-      yProp: "--y2",
-      x: {
-        base: 70,
-        waves: [
-          { amp: 14, freq: 0.023, phase: 0.19 },
-          { amp: 5.0, freq: 0.064, phase: 0.56 },
-          { amp: 3.2, freq: 0.098, phase: 0.87, fn: Math.cos },
-        ],
-      },
-      y: {
-        base: 30,
-        waves: [
-          { amp: 12.5, freq: 0.029, phase: 0.61 },
-          { amp: 4.1, freq: 0.078, phase: 0.24 },
-          { amp: 2.7, freq: 0.113, phase: 0.91, fn: Math.cos },
-        ],
-      },
-    },
-    {
-      xProp: "--x3",
-      yProp: "--y3",
-      x: {
-        base: 59,
-        waves: [
-          { amp: 17, freq: 0.02, phase: 0.12 },
-          { amp: 5.8, freq: 0.061, phase: 0.47 },
-          { amp: 3.6, freq: 0.094, phase: 0.78, fn: Math.cos },
-        ],
-      },
-      y: {
-        base: 70,
-        waves: [
-          { amp: 14, freq: 0.026, phase: 0.32 },
-          { amp: 4.6, freq: 0.071, phase: 0.92 },
-          { amp: 3.0, freq: 0.11, phase: 0.44, fn: Math.cos },
-        ],
-      },
-    },
-    {
-      xProp: "--x4",
-      yProp: "--y4",
-      x: {
-        base: 52,
-        waves: [
-          { amp: 11, freq: 0.027, phase: 0.28 },
-          { amp: 3.8, freq: 0.073, phase: 0.63 },
-          { amp: 2.2, freq: 0.12, phase: 0.18, fn: Math.cos },
-        ],
-      },
-      y: {
-        base: 58,
-        waves: [
-          { amp: 9, freq: 0.031, phase: 0.51 },
-          { amp: 3.4, freq: 0.082, phase: 0.37 },
-          { amp: 2.0, freq: 0.125, phase: 0.95, fn: Math.cos },
-        ],
-      },
-    },
-  ];
-
-  const evaluateAxis = (time, axis) =>
-    axis.waves.reduce((acc, wave) => {
-      const fn = wave.fn || Math.sin;
-      return acc + fn(TAU * (time * wave.freq + wave.phase)) * wave.amp;
-    }, axis.base);
-
-  let start = performance.now();
-
-  function tick(now) {
-    const time = (now - start) / 1000;
-
-    bubbles.forEach((bubble) => {
-      const x = evaluateAxis(time, bubble.x);
-      const y = evaluateAxis(time, bubble.y);
-      el.style.setProperty(bubble.xProp, `${x.toFixed(2)}%`);
-      el.style.setProperty(bubble.yProp, `${y.toFixed(2)}%`);
-    });
-
-    const blurLight = 48 + 8 * Math.sin(TAU * time * 0.024);
-    const blurDark = 52 + 6 * Math.cos(TAU * time * 0.02);
-    const lightPulse = 0.7 + 0.1 * (0.5 + 0.5 * Math.sin(TAU * time * 0.031 + 0.6));
-    const shadowPulse = 0.88 + 0.06 * (0.5 + 0.5 * Math.cos(TAU * time * 0.028 - 0.4));
-    el.style.setProperty("--cm-blur-light", blurLight.toFixed(1));
-    el.style.setProperty("--cm-blur-dark", blurDark.toFixed(1));
-    el.style.setProperty("--cm-light-opacity", lightPulse.toFixed(3));
-    el.style.setProperty("--cm-shadow-opacity", shadowPulse.toFixed(3));
-
-    requestAnimationFrame(tick);
+    if (cursor) node.style.borderRight = '1px solid transparent';
   }
 
-  requestAnimationFrame(tick);
+  // LAYOUT
+  function layout(){
+    const h = window.innerHeight;
+    track.style.height = `${sections.length * h}px`;
+    sections.forEach((sec, i) => {
+      sec.style.position = 'absolute';
+      sec.style.top = `${i * h}px`;
+      sec.style.left = '0';
+      sec.style.right = '0';
+      sec.style.bottom = 'auto';
+    });
+    track.style.transform = `translate3d(0, ${-index * h}px, 0)`;
+  }
+  window.addEventListener('resize', layout);
+
+  // EASING + TWEEN
+  function easeInOutCubic(t){ return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3)/2; }
+  function tweenTo(targetIndex, duration=500){
+    if (isAnimating) return Promise.resolve();
+    isAnimating = true;
+    const start = performance.now();
+    const h = window.innerHeight;
+    const startY = -index * h;
+    const endY = -targetIndex * h;
+
+    return new Promise(resolve => {
+      function frame(now){
+        const p = Math.min(1, (now - start) / duration);
+        const y = startY + (endY - startY) * easeInOutCubic(p);
+        track.style.transform = `translate3d(0, ${y}px, 0)`;
+        if (p < 1) requestAnimationFrame(frame);
+        else {
+          index = targetIndex;
+          isAnimating = false;
+          updateDots();
+          // reveal
+          const current = sections[index];
+          if (current && current.classList.contains('reveal')) {
+            current.classList.add('is-visible');
+          }
+          resolve();
+        }
+      }
+      requestAnimationFrame(frame);
+    });
+  }
+
+  function clampIndex(i){ return Math.max(0, Math.min(sections.length - 1, i)); }
+
+  function go(delta){
+    if (isAnimating) return;
+    const now = performance.now();
+    if (now - lastNavAt < NAV_COOLDOWN) return;
+    const next = clampIndex(index + delta);
+    if (next !== index){
+      lastNavAt = now;
+      tweenTo(next).then(()=>{ lastNavAt = performance.now(); });
+    }
+  }
+
+  // DOTS
+  function buildDots(){
+    dotsNav.innerHTML = '';
+    sections.forEach((_, i) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.setAttribute('aria-label', `Go to slide ${i+1}`);
+      btn.addEventListener('click', () => {
+        if (isAnimating) return;
+        tweenTo(i);
+      });
+      btn.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); btn.click(); }
+      });
+      dotsNav.appendChild(btn);
+    });
+    updateDots();
+  }
+  function updateDots(){
+    const btns = dotsNav.querySelectorAll('button');
+    btns.forEach((b, i) => b.setAttribute('aria-current', i === index ? 'true' : 'false'));
+  }
+
+  // INPUT HANDLERS
+  function onWheel(e){
+    const now = performance.now();
+    if (isAnimating || now - lastNavAt < NAV_COOLDOWN) return;
+    wheelAccum += e.deltaY;
+    if (Math.abs(wheelAccum) >= WHEEL_THRESHOLD){
+      const dir = wheelAccum > 0 ? +1 : -1;
+      wheelAccum = 0;
+      go(dir);
+    }
+  }
+  function onTouchStart(e){ if (e.touches && e.touches.length) startTouchY = e.touches[0].clientY; }
+  function onTouchMove(e){
+    if (startTouchY == null) return;
+    if (isAnimating) { startTouchY = null; return; }
+    const dy = startTouchY - e.touches[0].clientY;
+    if (Math.abs(dy) > 50){
+      const dir = dy > 0 ? +1 : -1;
+      startTouchY = null;
+      go(dir);
+    }
+  }
+  function onTouchEnd(){ startTouchY = null; }
+  function onKeyDown(e){
+    const code = e.code;
+    if (code === 'ArrowDown' || code === 'PageDown' || code === 'Space') { e.preventDefault(); go(+1); }
+    else if (code === 'ArrowUp' || code === 'PageUp') { e.preventDefault(); go(-1); }
+    else if (code === 'Home') { e.preventDefault(); tweenTo(0); }
+    else if (code === 'End') { e.preventDefault(); tweenTo(sections.length - 1); }
+  }
+
+  // MENU OVERLAY (already wired in index.html controller)
+
+  // INTRO
+  function armBurgerCentered(){
+    if (!burger) return;
+    burger.setAttribute('data-active', '1');
+    burger.removeAttribute('tabindex');
+  }
+  function expandBurgerToFull(){ if (burger) burger.classList.add('burger-bar--expanded'); }
+  function unlockScroll(){ document.body.classList.remove('is-locked'); }
+
+  async function runIntro(){
+    layout();
+    buildDots();
+    sections[0].classList.add('is-visible');
+
+    await sleep(240);
+    await typewriter(sub, 'Based in St. Petersburg', { min: 80, max: 150, cursor: true });
+    armBurgerCentered();
+    await sleep(300);
+    expandBurgerToFull();
+    unlockScroll();
+
+    const opts = { passive: true };
+    // Attach to window to be robust (not only slides area)
+    window.addEventListener('wheel', onWheel, opts);
+    window.addEventListener('touchstart', onTouchStart, opts);
+    window.addEventListener('touchmove', onTouchMove, opts);
+    window.addEventListener('touchend', onTouchEnd, opts);
+    window.addEventListener('keydown', onKeyDown);
+  }
+
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', runIntro); }
+  else { runIntro(); }
 })();
