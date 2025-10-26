@@ -11,7 +11,7 @@
   --safe-left: env(safe-area-inset-left, 0px);
 
   --burger-h: 64px;
-  --burger-line-h: 3px;
+  --burger-line-h: 4px;
 
   --transition-slow: 1000ms;
   --transition-med: 480ms;
@@ -56,20 +56,40 @@ body.is-locked, body.has-menu-open, body.is-menu-closing { overflow: hidden; }
 
 /* Fixed full-width burger (lines animate) */
 .burger-bar {
-  position: fixed; top: 0; left: 0; width: 100vw; height: var(--burger-h);
-  margin: 0; padding: 0; border: 0; background:transparent; cursor:pointer;
-  z-index: 9999; pointer-events: none; opacity: 0;
-  will-change: transform, opacity; backface-visibility: hidden; transform: translateZ(0); contain: paint;
-  transition: opacity var(--transition-med) ease-in-out;
+  position: fixed;
+  top: calc(var(--safe-top) + 12px);
+  right: calc(var(--safe-right) + 12px);
+  width: 48px;
+  height: 48px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  z-index: 10010;
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  contain: paint;
+  transition: opacity var(--transition-med) ease-in-out, transform var(--transition-med) ease-in-out;
 }
 .burger-bar[data-active="1"] { opacity: 1; pointer-events: auto; }
 .burger-bar__line {
-  position: absolute; left: 0; width: 100%; height: var(--burger-line-h); background: var(--line);
-  opacity: 0; transform-origin: 50% 50%; transform: scaleX(0);
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  height: var(--burger-line-h);
+  background: var(--line);
+  opacity: 0;
+  transform-origin: 50% 50%;
+  transform: scaleX(0);
+  border-radius: 2px;
 }
-.burger-bar__line:nth-child(1) { top: calc(50% - 14px); }
+.burger-bar__line:nth-child(1) { top: 12px; }
 .burger-bar__line:nth-child(2) { top: 50%; transform: translateY(-50%) scaleX(0); }
-.burger-bar__line:nth-child(3) { top: calc(50% + 14px); }
+.burger-bar__line:nth-child(3) { bottom: 12px; }
 @keyframes lineGrow { 0% { transform: scaleX(0); opacity: 0;} 50% { opacity: 1;} 100% { transform: scaleX(1); opacity: 1;} }
 body.burger-animate .burger-bar__line:nth-child(1){ animation: lineGrow 520ms 120ms cubic-bezier(.2,.8,.2,1) forwards;}
 body.burger-animate .burger-bar__line:nth-child(2){ animation: lineGrow 520ms 210ms cubic-bezier(.2,.8,.2,1) forwards;}
@@ -113,7 +133,10 @@ body.is-menu-closing .site-menu { opacity: 0; pointer-events: none; }
 .container p { margin:0; color:var(--muted); font-size:clamp(15px, 2.2vw, 18px); line-height:1.6; }
 
 /* Dots */
-.dots { position: fixed; left:max(12px, calc(var(--safe-left) + 8px)); top:50%; transform: translateY(-50%); display:grid; gap:10px; z-index:20; }
+.dots { position: fixed; left:max(12px, calc(var(--safe-left) + 8px)); top:50%; transform: translateY(-50%); display:grid; gap:10px; z-index:20;
+  opacity: 0; pointer-events: none; transition: opacity var(--transition-med) ease-in-out;
+}
+body.burger-animate .dots, body:has(.burger-bar[data-active="1"]) .dots { opacity: 1; pointer-events: auto; }
 .dots button { width:8px; height:8px; border-radius:50%; border:0; background:#3a3a3a; padding:0; cursor:pointer; }
 .dots button[aria-current="true"] { background:#fff; transform: scale(1.1); }
 .dots button:focus-visible { outline:2px solid #fff; outline-offset:3px; }
@@ -124,7 +147,165 @@ body.is-menu-closing .site-menu { opacity: 0; pointer-events: none; }
   .frame { padding-right: clamp(28px, 8vw, 48px); }
 }
 
+
+/* === BURGER: Attention-grabbing animations === */
+
+/* Pop-in of the whole button */
+@keyframes burgerPop {
+  0% { transform: translateZ(0) scale(0.84) rotate(-6deg); opacity: 0; }
+  60% { transform: translateZ(0) scale(1.06) rotate(2deg); opacity: 1; }
+  100% { transform: translateZ(0) scale(1) rotate(0deg); opacity: 1; }
+}
+
+/* Elastic line draw */
+@keyframes lineElastic {
+  0% { transform: scaleX(0); opacity: 0; }
+  60% { transform: scaleX(1.08); opacity: 1; }
+  100% { transform: scaleX(1); opacity: 1; }
+}
+
+/* Slide-in from left with overshoot (used subtly on top/bottom) */
+@keyframes lineSlideIn {
+  0% { transform: translateX(-8px) scaleX(0); opacity: 0; }
+  60% { transform: translateX(1px) scaleX(1.06); opacity: 1; }
+  100% { transform: translateX(0) scaleX(1); opacity: 1; }
+}
+
+/* One-shot shimmer highlight across the lines */
+@keyframes shimmer {
+  0% { background-position: -60% 0; }
+  100% { background-position: 160% 0; }
+}
+
+/* Idle micro pulse ring to catch attention */
+@keyframes ringPulse {
+  0% { transform: scale(0.6); opacity: 0.0; }
+  50% { transform: scale(1); opacity: 0.35; }
+  100% { transform: scale(1.2); opacity: 0; }
+}
+
+/* Hover micro-wiggle */
+@keyframes wiggle {
+  0%, 100% { transform: translateZ(0) rotate(0deg); }
+  30% { transform: translateZ(0) rotate(-1.2deg); }
+  60% { transform: translateZ(0) rotate(1deg); }
+}
+
+/* Active (menu-open) springy morph */
+@keyframes toXPop {
+  0% { transform: rotate(0) translate(0, 0); }
+  50% { transform: rotate(12deg) translate(0, 1px); }
+  100% { transform: rotate(45deg) translate(0, 1px); }
+}
+@keyframes fromXPop {
+  0% { transform: rotate(45deg) translate(0, 1px); }
+  50% { transform: rotate(-8deg) translate(0, -1px); }
+  100% { transform: rotate(0) translate(0, 0); }
+}
+
+/* Button container visual flair */
+.burger-bar {
+  /* keep existing props; add a subtle pop when activating */
+}
+.burger-bar[data-active="1"] {
+  animation: burgerPop 520ms cubic-bezier(.2,.9,.2,1) both;
+}
+
+/* Add ripple ring (only when armed and menu is closed, to avoid distraction inside menu) */
+.burger-bar::before {
+  content: "";
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.12) 35%, rgba(255,255,255,0) 60%);
+  filter: blur(6px);
+  opacity: 0;
+  pointer-events: none;
+}
+body.burger-animate .burger-bar[data-active="1"]::before {
+  animation: ringPulse 1400ms ease-out 280ms 1 forwards;
+}
+
+/* Lines: gradient with shimmer pass */
+.burger-bar__line {
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.0) 0%, rgba(255,255,255,0.9) 15%, rgba(255,255,255,1) 50%, rgba(255,255,255,0.9) 85%, rgba(255,255,255,0) 100%);
+  background-size: 220% 100%;
+}
+
+/* Staggered draws */
+body.burger-animate .burger-bar__line:nth-child(1){ animation: lineSlideIn 520ms 80ms cubic-bezier(.2,.9,.2,1) forwards, shimmer 680ms 260ms ease-out 1; }
+body.burger-animate .burger-bar__line:nth-child(2){ animation: lineElastic 520ms 160ms cubic-bezier(.2,.9,.2,1) forwards, shimmer 680ms 320ms ease-out 1; }
+body.burger-animate .burger-bar__line:nth-child(3){ animation: lineSlideIn 520ms 240ms cubic-bezier(.2,.9,.2,1) forwards, shimmer 680ms 380ms ease-out 1; }
+
+/* Hover micro interaction (after activation) */
+.burger-bar[data-active="1"]:hover { animation: wiggle 280ms ease-in-out 1; }
+.burger-bar[data-active="1"]:active { transform: translateZ(0) scale(0.97); }
+
+/* Morph to X when menu is open */
+body.has-menu-open .burger-bar__line:nth-child(1) {
+  top: 50%;
+  transform-origin: 50% 50%;
+  animation: toXPop 360ms cubic-bezier(.2,.9,.2,1) forwards;
+}
+body.has-menu-open .burger-bar__line:nth-child(2) {
+  opacity: 0;
+  transform: translateY(-50%) scaleX(0);
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+body.has-menu-open .burger-bar__line:nth-child(3) {
+  bottom: auto;
+  top: 50%;
+  transform-origin: 50% 50%;
+  animation: toXPop 360ms cubic-bezier(.2,.9,.2,1) forwards;
+  animation-delay: 40ms;
+  transform: rotate(-45deg);
+}
+
+/* Return from X */
+body.is-menu-closing .burger-bar__line:nth-child(1),
+body:not(.has-menu-open):not(.is-menu-closing) .burger-bar__line:nth-child(1) {
+  animation: fromXPop 360ms cubic-bezier(.2,.9,.2,1) 1 both;
+}
+body.is-menu-closing .burger-bar__line:nth-child(3),
+body:not(.has-menu-open):not(.is-menu-closing) .burger-bar__line:nth-child(3) {
+  animation: fromXPop 360ms cubic-bezier(.2,.9,.2,1) 1 both;
+}
+
+/* Ensure lines are visible when armed if reduce-motion is off */
 @media (prefers-reduced-motion: reduce) {
-  .burger-bar { transition: none; }
+  .burger-bar[data-active="1"] { animation: none; }
+  .burger-bar__line { animation: none !important; background: var(--line); }
+  body.has-menu-open .burger-bar__line:nth-child(1),
+  body.has-menu-open .burger-bar__line:nth-child(3) { transform: rotate(45deg); top: 50%; }
+  body.has-menu-open .burger-bar__line:nth-child(2) { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .burger-bar {
+  position: fixed;
+  top: calc(var(--safe-top) + 12px);
+  right: calc(var(--safe-right) + 12px);
+  width: 48px;
+  height: 48px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  z-index: 10010;
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  contain: paint;
+  transition: opacity var(--transition-med) ease-in-out, transform var(--transition-med) ease-in-out;
+}
   .slide.reveal { opacity: 1; transform: none; transition: none; }
+}
+
+/* Fallback: ensure lines are visible when burger is armed, even if animations get interrupted */
+.burger-bar[data-active="1"] .burger-bar__line {
+  opacity: 1 !important;
+  transform: translateY(0) scaleX(1) !important;
 }
