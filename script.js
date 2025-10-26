@@ -1,8 +1,7 @@
-// Clean, robust build: intro + burger + track slides + dots + iOS-friendly sizes
+// Clean working build: intro + burger + track slides + dots + iOS-friendly sizes
 (function(){
   const sub = document.getElementById('heroSub');
   const burger = document.querySelector('.burger-bar');
-  const slidesRoot = document.getElementById('slides');
   const track = document.getElementById('track');
   const dotsNav = document.getElementById('dots');
   const sections = Array.from(track.querySelectorAll('.slide'));
@@ -12,10 +11,10 @@
   let wheelAccum = 0;
   let lastNavAt = 0;
   const WHEEL_THRESHOLD = 60;
-  const NAV_COOLDOWN = 380; // < 500ms
+  const NAV_COOLDOWN = 320; // faster feel on mobile
+  const TWEEN_MS = 450;
 
   function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
-
   async function typewriter(node, text, {min=80, max=150, cursor=true}={}){
     node.textContent = '';
     if (cursor) node.style.borderRight = '1px solid #6b6b6b';
@@ -39,12 +38,10 @@
     sections.forEach((sec, i) => {
       sec.style.position = 'absolute';
       sec.style.top = `${i * h}px`;
-      sec.style.left = '0';
-      sec.style.right = '0';
+      sec.style.left = '0'; sec.style.right = '0';
     });
     track.style.transform = `translate3d(0, ${-index * h}px, 0)`;
   }
-
   let resizeRAF = null;
   function onResize(){
     if (isAnimating) return;
@@ -55,14 +52,13 @@
   function easeInOutCubic(t){ return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3)/2; }
   function clampIndex(i){ return Math.max(0, Math.min(sections.length - 1, i)); }
 
-  function tweenTo(targetIndex, duration=500){
+  function tweenTo(targetIndex, duration=TWEEN_MS){
     if (isAnimating) return Promise.resolve();
     isAnimating = true;
     const start = performance.now();
     const h = vpHeight();
     const startY = -index * h;
     const endY = -targetIndex * h;
-
     return new Promise(resolve => {
       function frame(now){
         const p = Math.min(1, (now - start) / duration);
@@ -103,7 +99,8 @@
   function onTouchMove(e){
     if (startTouchY == null || isAnimating) return;
     const dy = startTouchY - e.touches[0].clientY;
-    if (Math.abs(dy) > 50){ startTouchY = null; go(dy > 0 ? +1 : -1); }
+    if (Math.abs(dy) > 5) e.preventDefault(); // block browser gestures
+    if (Math.abs(dy) > 30){ e.preventDefault(); startTouchY = null; go(dy > 0 ? +1 : -1); }
   }
   function onTouchEnd(){ startTouchY = null; }
   function onKeyDown(e){
@@ -143,18 +140,16 @@
     layout();
     buildDots();
     sections[0].classList.add('is-visible');
-
-    await sleep(240);
+    await sleep(200);
     await typewriter(sub, 'Based in St. Petersburg', { min: 80, max: 150, cursor: true });
     armBurger();
     unlockScroll();
 
-    const opts = { passive: true };
     window.addEventListener('resize', onResize);
-    window.addEventListener('wheel', onWheel, opts);
-    window.addEventListener('touchstart', onTouchStart, opts);
-    window.addEventListener('touchmove', onTouchMove, opts);
-    window.addEventListener('touchend', onTouchEnd, opts);
+    window.addEventListener('wheel', onWheel, { passive: true });
+    window.addEventListener('touchstart', onTouchStart, { passive: false });
+    window.addEventListener('touchmove', onTouchMove, { passive: false });
+    window.addEventListener('touchend', onTouchEnd, { passive: false });
     window.addEventListener('keydown', onKeyDown);
   }
 

@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body class="is-locked theme-dark">
-    <!-- Burger (fixed full width) -->
+    <!-- Burger (fixed full width, lines animate) -->
     <button
       class="burger-bar"
       type="button"
@@ -48,46 +48,56 @@
     <main class="slides" id="slides" aria-label="Slides">
       <div class="slides__track" id="track">
         <section class="slide hero is-visible" id="hero" aria-label="Hero">
-          <div class="hero__center">
-            <h1 class="hero__title">CLASSNOE MESTO</h1>
-            <div id="heroSub" class="hero__sub" aria-live="polite" aria-label="Based in St. Petersburg"></div>
+          <div class="frame">
+            <div class="hero__center">
+              <h1 class="hero__title">CLASSNOE MESTO</h1>
+              <div id="heroSub" class="hero__sub" aria-live="polite" aria-label="Based in St. Petersburg"></div>
+            </div>
           </div>
         </section>
 
         <section class="slide reveal" id="about" aria-label="About">
-          <div class="container">
-            <h2>WHO WE ARE</h2>
-            <p>
-              We’re a creative collective shaping a culture where training, taste, and aesthetics are
-              part of everyday life. Health as identity. Energy as a habit. Design as a daily practice.
-            </p>
+          <div class="frame">
+            <div class="container">
+              <h2>WHO WE ARE</h2>
+              <p>
+                We’re a creative collective shaping a culture where training, taste, and aesthetics are
+                part of everyday life. Health as identity. Energy as a habit. Design as a daily practice.
+              </p>
+            </div>
           </div>
         </section>
 
         <section class="slide reveal" id="projects" aria-label="Projects">
-          <div class="container">
-            <h2>PROJECTS</h2>
-            <p>Coming soon.</p>
+          <div class="frame">
+            <div class="container">
+              <h2>PROJECTS</h2>
+              <p>Coming soon.</p>
+            </div>
           </div>
         </section>
 
         <section class="slide reveal" id="menu-coffee" aria-label="Coffee">
-          <div class="container">
-            <h2>COFFEE</h2>
-            <p>Concept menu and signature drinks in progress.</p>
+          <div class="frame">
+            <div class="container">
+              <h2>COFFEE</h2>
+              <p>Concept menu and signature drinks in progress.</p>
+            </div>
           </div>
         </section>
 
         <section class="slide reveal" id="contacts" aria-label="Contacts">
-          <div class="container">
-            <h2>CONTACT</h2>
-            <p>hello@classnoe.mesto — Instagram / Telegram</p>
+          <div class="frame">
+            <div class="container">
+              <h2>CONTACT</h2>
+              <p>hello@classnoe.mesto — Instagram / Telegram</p>
+            </div>
           </div>
         </section>
       </div>
     </main>
 
-    <!-- Menu controller -->
+    <!-- Menu controller (minimal, reliable) -->
     <script>
       (function () {
         const menu = document.getElementById('site-menu');
@@ -97,10 +107,8 @@
         const links = [...(menu?.querySelectorAll('[data-menu-link]') || [])];
         const OPEN_CLASS = 'has-menu-open';
         const CLOSING_CLASS = 'is-menu-closing';
-        const CLOSE_ANIM_MS = 420;
-
+        const CLOSE_ANIM_MS = 380;
         if (!menu || !toggleBtn) return;
-
         let lastFocusedEl = null;
 
         function setAria(isOpen) {
@@ -109,52 +117,21 @@
           if (!isOpen) menu.setAttribute('hidden', '');
           else menu.removeAttribute('hidden');
         }
-
-        function trapFocus(e) {
-          if (e.key !== 'Tab') return;
-          const focusables = menu.querySelectorAll(
-            'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
-          );
-          if (!focusables.length) return;
-          const first = focusables[0];
-          const last = focusables[focusables.length - 1];
-          if (e.shiftKey && document.activeElement === first) {
-            last.focus();
-            e.preventDefault();
-          } else if (!e.shiftKey && document.activeElement === last) {
-            first.focus();
-            e.preventDefault();
-          }
-        }
-
-        function onKeydown(e) {
-          if (e.key === 'Escape') {
-            closeMenu();
-          } else if (e.key === 'Tab') {
-            trapFocus(e);
-          }
-        }
-
         function openMenu() {
           lastFocusedEl = document.activeElement;
           document.body.classList.add(OPEN_CLASS);
           menu.classList.add('is-open');
           setAria(true);
-          document.addEventListener('keydown', onKeydown);
           (focusHost || menu).focus({ preventScroll: true });
         }
-
         function closeMenu() {
           document.body.classList.add(CLOSING_CLASS);
           document.body.classList.remove(OPEN_CLASS);
           setAria(false);
-          document.removeEventListener('keydown', onKeydown);
           window.setTimeout(() => {
             document.body.classList.remove(CLOSING_CLASS);
             menu.classList.remove('is-open');
-            if (lastFocusedEl && lastFocusedEl.focus) {
-              lastFocusedEl.focus({ preventScroll: true });
-            }
+            if (lastFocusedEl && lastFocusedEl.focus) lastFocusedEl.focus({ preventScroll: true });
           }, CLOSE_ANIM_MS);
         }
 
@@ -166,14 +143,8 @@
             isOpen ? closeMenu() : openMenu();
           }
         });
-
         backdrop?.addEventListener('click', closeMenu);
         links.forEach((a) => a.addEventListener('click', closeMenu));
-
-        menu.addEventListener('click', (e) => {
-          const container = menu.querySelector('.site-menu__container');
-          if (container && !container.contains(e.target)) closeMenu();
-        });
       })();
     </script>
 
