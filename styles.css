@@ -41,13 +41,13 @@ body.is-locked, body.has-menu-open, body.is-menu-closing { overflow: hidden; }
 .hero__center { display: grid; gap: 12px; text-align: center; }
 .hero__title {
   margin: 0;
-  font-size: clamp(28.80px, 5.2vw, 72.00px);
+  font-size: clamp(24px, 5.2vw, 60px);
   font-weight: 700;
   letter-spacing: 0.08em;
 }
 .hero__sub {
   min-height: 1.6em;
-  font-size: clamp(15.60px, 2.2vw, 21.60px);
+  font-size: clamp(13px, 2.2vw, 18px);
   color: var(--muted);
   letter-spacing: 0.12em;
   white-space: pre-wrap;
@@ -87,6 +87,38 @@ body.is-locked, body.has-menu-open, body.is-menu-closing { overflow: hidden; }
   transform: scaleX(0);
   border-radius: 2px;
 }
+
+/* --- Burger: 3 lines morph to X --- */
+.burger-bar__line {
+  transition:
+    transform var(--transition-med) cubic-bezier(.2,.8,.2,1),
+    opacity 320ms ease,
+    top var(--transition-med) ease,
+    bottom var(--transition-med) ease;
+}
+
+/* When menu is open, morph into an "X" */
+body.has-menu-open .burger-bar__line:nth-child(1) {
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+}
+body.has-menu-open .burger-bar__line:nth-child(2) {
+  opacity: 0;
+  transform: translateY(-50%) scaleX(0);
+}
+body.has-menu-open .burger-bar__line:nth-child(3) {
+  bottom: auto;
+  top: 50%;
+  transform: translateY(-50%) rotate(-45deg);
+}
+
+/* Hover/Focus polish */
+.burger-bar:focus-visible .burger-bar__line,
+.burger-bar:hover .burger-bar__line {
+  opacity: 1;
+}
+
+
 .burger-bar__line:nth-child(1) { top: 12px; }
 .burger-bar__line:nth-child(2) { top: 50%; transform: translateY(-50%) scaleX(0); }
 .burger-bar__line:nth-child(3) { bottom: 12px; }
@@ -107,7 +139,7 @@ body.is-menu-closing .site-menu { opacity: 0; pointer-events: none; }
   display:grid; place-items:center; color:var(--fg); background:transparent; outline:none;
 }
 .site-menu__list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap: clamp(16px, 3vw, 28px); align-items:center; justify-content:center; }
-.site-menu__link{ color:var(--fg); text-decoration:none; letter-spacing:.14em; text-transform:uppercase; font-weight:400; font-size: clamp(1.1rem,4vw,2rem); opacity:.95; transition:opacity .22s ease, transform .22s ease; }
+.site-menu__link{ color:var(--fg); text-decoration:none; letter-spacing:.14em; text-transform:uppercase; font-weight:400; font-size:clamp(1.1rem,4vw,2rem); opacity:.95; transition:opacity .22s ease, transform .22s ease; }
 .site-menu__link:hover, .site-menu__link:focus-visible { opacity:1; transform: translateY(-2px); outline:none; }
 
 /* Slides track */
@@ -129,8 +161,8 @@ body.is-menu-closing .site-menu { opacity: 0; pointer-events: none; }
 }
 .hero .frame { place-items: center; text-align: center; }
 .container { max-width: 900px; text-align: left; }
-.container h2 { margin:0 0 12px 0; font-size: clamp(26.40px, 4.8vw, 50.40px); letter-spacing:.06em; }
-.container p { margin:0; color:var(--muted); font-size: clamp(18.00px, 2.2vw, 21.60px); line-height:1.6; }
+.container h2 { margin:0 0 12px 0; font-size: clamp(22px, 4.8vw, 42px); letter-spacing:.06em; }
+.container p { margin:0; color:var(--muted); font-size:clamp(15px, 2.2vw, 18px); line-height:1.6; }
 
 /* Dots */
 .dots { position: fixed; left:max(12px, calc(var(--safe-left) + 8px)); top:50%; transform: translateY(-50%); display:grid; gap:10px; z-index:20;
@@ -172,35 +204,85 @@ body.burger-animate .dots, body:has(.burger-bar[data-active="1"]) .dots { opacit
 }
 
 
-/* === Mobile dots reposition to bottom center (2025-10-27) === */
-@media (max-width: 1023px) {
-  .dots {
-    position: fixed;
-    left: 50%;
-    right: auto;
-    top: auto;
-    bottom: calc(16px + env(safe-area-inset-bottom));
-    transform: translateX(-50%);
-    display: flex !important;
-    flex-direction: row;
-    gap: 12px;
-    z-index: 20;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity var(--transition-med) ease-in-out;
-  }
-  body.burger-animate .dots { opacity: 1; pointer-events: auto; }
-
-  .dots button {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    border: 0;
-    background: rgba(255,255,255,0.25);
-    padding: 0;
-    cursor: pointer;
-    transition: background 300ms ease, transform 300ms ease;
-  }
-  .dots button[aria-current="true"] { background: #fff; transform: scale(1.25); }
+/* === Burger precise alignment fix (2025-10-27) === */
+:root {
+  /* override thickness for crisp rendering */
+  --burger-line-h: 2px;
+  --burger-line-w: 24px;
+  --burger-gap: 9px; /* distance from center to top/bottom bars */
 }
+
+/* Ensure button is perfectly square */
+.burger-bar {
+  width: 44px;
+  height: 44px;
+}
+
+/* Centered, equal-length lines */
+.burger-bar__line {
+  position: absolute;
+  left: 50%;
+  width: var(--burger-line-w);
+  height: var(--burger-line-h);
+  margin-left: calc(var(--burger-line-w) / -2);
+  background: var(--line);
+  border-radius: 2px;
+  opacity: 1;
+  transform-origin: 50% 50%;
+  will-change: transform, opacity, top;
+  backface-visibility: hidden;
+}
+
+/* Baseline positions (three parallel lines) */
+.burger-bar__line:nth-child(1) { top: calc(50% - var(--burger-gap)); }
+.burger-bar__line:nth-child(2) { top: 50%; margin-top: calc(var(--burger-line-h) / -2); }
+.burger-bar__line:nth-child(3) { top: calc(50% + var(--burger-gap) - var(--burger-line-h)); }
+
+/* Smooth transitions */
+.burger-bar__line {
+  transition:
+    transform var(--transition-med) cubic-bezier(.2,.8,.2,1),
+    opacity 260ms ease,
+    top var(--transition-med) ease;
+}
+
+/* Morph into X */
+body.has-menu-open .burger-bar__line:nth-child(1) {
+  top: 50%;
+  transform: rotate(45deg);
+}
+body.has-menu-open .burger-bar__line:nth-child(2) {
+  top: 50%;
+  opacity: 0;
+  transform: scaleX(0.5);
+}
+body.has-menu-open .burger-bar__line:nth-child(3) {
+  top: 50%;
+  transform: rotate(-45deg);
+}
+
+/* Optional entrance grow animation disabled for consistency */
+body.burger-animate .burger-bar__line { animation: none !important; }
+
+
+
+/* === Visibility fix: show burger in inactive state (2025-10-27) === */
+.burger-bar { opacity: 1 !important; pointer-events: auto !important; }
+
+/* Reset default line transforms so the icon is visible before open */
+.burger-bar__line { opacity: 1 !important; transform: none !important; }
+
+/* Ensure middle line is not collapsed by older rules */
+.burger-bar__line:nth-child(2) {
+  top: 50% !important;
+  margin-top: calc(var(--burger-line-h) / -2) !important;
+  transform: none !important;
+}
+
+
+
+/* === Stage timing: burger appears after intro, together with dots (2025-10-27) === */
+body:not(.burger-animate) .burger-bar { opacity: 0 !important; pointer-events: none !important; }
+body.burger-animate .burger-bar { opacity: 1 !important; pointer-events: auto !important; }
+/* Dots already tied to .burger-animate in CSS */
 

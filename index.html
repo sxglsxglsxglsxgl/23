@@ -114,6 +114,7 @@
         function setAria(isOpen) {
           toggleBtn.setAttribute('aria-expanded', String(isOpen));
           menu.setAttribute('aria-hidden', String(!isOpen));
+          toggleBtn.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
           if (!isOpen) menu.setAttribute('hidden', '');
           else menu.removeAttribute('hidden');
         }
