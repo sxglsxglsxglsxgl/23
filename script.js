@@ -128,20 +128,15 @@
     // buildDots() delayed to after intro;
     sections[0].classList.add('is-visible');
     await sleep(200);
-    sub.textContent = 'born in saint petersburg';
+    sub.textContent = 'Born in St. Petersburg';
     // prepare robust animation start
     function afterIntro(){ try{ buildDots(); }catch(e){} try{ armBurger(); }catch(e){} try{ unlockScroll(); }catch(e){} }
     // reset in case class was present, force reflow, attach listener, then start
     sub.classList.remove('is-blur-intro');
     void sub.offsetWidth;
+    function afterIntro(){ try{ buildDots(); }catch(e){} try{ armBurger(); }catch(e){} try{ unlockScroll(); }catch(e){} }
     sub.addEventListener('animationend', afterIntro, { once: true });
     requestAnimationFrame(() => { sub.classList.add('is-blur-intro'); });
-function afterIntro(){
-      buildDots();
-      armBurger();
-      unlockScroll();
-    }
-    sub.addEventListener('animationend', afterIntro, { once: true });
     // armBurger() delayed to after intro;
     // unlockScroll() delayed to after intro;
 

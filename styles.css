@@ -328,7 +328,7 @@ body.burger-animate .burger-bar { opacity: 1 !important; pointer-events: auto !i
   opacity: .2;
   transform: translateY(4px);
   will-change: filter, opacity, transform;
-  animation: heroFocusIn 1900ms ease-out forwards;
+  animation: heroFocusIn 1400ms ease-out forwards;
 }
 @keyframes heroFocusIn {
   to {
