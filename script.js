@@ -15,19 +15,6 @@
   const TWEEN_MS = 450;
 
   function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
-  async function typewriter(node, text, {min=80, max=150, cursor=true}={}){
-    node.textContent = '';
-    if (cursor) node.style.borderRight = '1px solid #6b6b6b';
-    for (const ch of text){
-      node.textContent += ch;
-      const jitter = Math.random() * (max - min) + min;
-      const extra = (/[.,;:!?\s]/).test(ch) ? 28 : 0;
-      // eslint-disable-next-line no-await-in-loop
-      await sleep(jitter + extra);
-    }
-    if (cursor) node.style.borderRight = '1px solid transparent';
-  }
-
   function vpHeight(){
     return (window.visualViewport && Math.round(window.visualViewport.height)) || document.documentElement.clientHeight;
   }
@@ -138,12 +125,25 @@
 
   async function run(){
     layout();
-    buildDots();
+    // buildDots() delayed to after intro;
     sections[0].classList.add('is-visible');
     await sleep(200);
-    await typewriter(sub, 'Based in St. Petersburg', { min: 80, max: 150, cursor: true });
-    armBurger();
-    unlockScroll();
+    sub.textContent = 'born in saint petersburg';
+    // prepare robust animation start
+    function afterIntro(){ try{ buildDots(); }catch(e){} try{ armBurger(); }catch(e){} try{ unlockScroll(); }catch(e){} }
+    // reset in case class was present, force reflow, attach listener, then start
+    sub.classList.remove('is-blur-intro');
+    void sub.offsetWidth;
+    sub.addEventListener('animationend', afterIntro, { once: true });
+    requestAnimationFrame(() => { sub.classList.add('is-blur-intro'); });
+function afterIntro(){
+      buildDots();
+      armBurger();
+      unlockScroll();
+    }
+    sub.addEventListener('animationend', afterIntro, { once: true });
+    // armBurger() delayed to after intro;
+    // unlockScroll() delayed to after intro;
 
     window.addEventListener('resize', onResize);
     window.addEventListener('wheel', onWheel, { passive: true });
@@ -156,3 +156,4 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
   else run();
 })();
+

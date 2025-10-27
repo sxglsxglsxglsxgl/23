@@ -322,3 +322,19 @@ body.burger-animate .burger-bar { opacity: 1 !important; pointer-events: auto !i
   }
 }
 
+/* === Hero sub: Blur-in Focus effect (2025-10-27) === */
+.hero__sub.is-blur-intro {
+  filter: blur(12px);
+  opacity: .2;
+  transform: translateY(4px);
+  will-change: filter, opacity, transform;
+  animation: heroFocusIn 1900ms ease-out forwards;
+}
+@keyframes heroFocusIn {
+  to {
+    filter: blur(0);
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
