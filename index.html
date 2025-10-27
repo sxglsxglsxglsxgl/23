@@ -30,6 +30,11 @@
 
     <!-- Dots indicator -->
     <nav class="dots" id="dots" aria-label="Slide navigation"></nav>
+    <!-- Mobile progress bar -->
+    <div class="progress" id="progress">
+      <div class="progress__fill"></div>
+    </div>
+
 
     <!-- Full black menu overlay -->
     <div id="site-menu" class="site-menu" role="dialog" aria-modal="true" aria-hidden="true" hidden>
@@ -114,6 +119,7 @@
         function setAria(isOpen) {
           toggleBtn.setAttribute('aria-expanded', String(isOpen));
           menu.setAttribute('aria-hidden', String(!isOpen));
+          toggleBtn.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
           if (!isOpen) menu.setAttribute('hidden', '');
           else menu.removeAttribute('hidden');
         }
