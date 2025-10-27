@@ -126,17 +126,6 @@
   function updateDots(){
     const btns = dotsNav.querySelectorAll('button');
     btns.forEach((b, i) => b.setAttribute('aria-current', i === index ? 'true' : 'false'));
-
-    // Mobile progress bar
-    const progress = document.getElementById('progress');
-    if (progress) {
-      const fill = progress.querySelector('.progress__fill');
-      if (fill && sections.length > 1) {
-        const pct = (index / (sections.length - 1)) * 100;
-        fill.style.width = pct + '%';
-      }
-    }
-
   }
 
   function armBurger(){
