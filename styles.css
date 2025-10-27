@@ -286,3 +286,16 @@ body:not(.burger-animate) .burger-bar { opacity: 0 !important; pointer-events: n
 body.burger-animate .burger-bar { opacity: 1 !important; pointer-events: auto !important; }
 /* Dots already tied to .burger-animate in CSS */
 
+
+
+/* === Mobile typography bump (only phones/tablets) — 2025-10-27 === */
+@media (max-width: 768px) {
+  .hero__title { font-size: clamp(28px, 6vw, 60px); }            /* was clamp(24px, 5.2vw, 60px) */
+  .hero__sub   { font-size: clamp(15px, 2.6vw, 21px); }          /* was clamp(13px, 2.2vw, 18px) */
+
+  .container h2 { font-size: clamp(25px, 5.5vw, 48px); }         /* was clamp(22px, 4.8vw, 42px) */
+  .container p  { font-size: clamp(17px, 2.6vw, 21px); }         /* was clamp(15px, 2.2vw, 18px) */
+
+  .site-menu__link { font-size: clamp(1.3rem, 4.6vw, 2.3rem); }  /* was clamp(1.1rem, 4vw, 2rem) */
+}
+
