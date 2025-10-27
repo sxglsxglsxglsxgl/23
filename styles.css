@@ -299,3 +299,26 @@ body.burger-animate .burger-bar { opacity: 1 !important; pointer-events: auto !i
   .site-menu__link { font-size: clamp(1.3rem, 4.6vw, 2.3rem); }  /* was clamp(1.1rem, 4vw, 2rem) */
 }
 
+
+
+/* === Mobile dots at bottom center (2025-10-27) === */
+@media (max-width: 1023px) {
+  .dots {
+    position: fixed;
+    left: 50%;
+    right: auto;
+    top: auto;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    z-index: 20;
+    /* visibility remains tied to .burger-animate */
+  }
+  .dots button {
+    width: 8px;
+    height: 8px;
+  }
+}
+
