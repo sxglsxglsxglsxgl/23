@@ -338,3 +338,15 @@ body.burger-animate .burger-bar { opacity: 1 !important; pointer-events: auto !i
   }
 }
 
+
+
+/* === Burger inside light circle (2025-10-29) === */
+.burger-bar {
+  background: #f7f7f7; /* почти белый, как у кружков */
+  border-radius: 80%;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.burger-bar__line {
+  background: #1a1a1a; /* тёмные линии для контраста */
+}
